@@ -1,0 +1,19 @@
+{% load static %}
+
+<h1>Result for: @{{ username }}</h1>
+
+{% if error %}
+    <p style="color:red;">{{ error }}</p>
+{% else %}
+    <ul>
+        <li>📅 Reg date: {{ created_at }}</li>
+        <li>👥 Subs: {{ followers_count }}</li>
+        <li>✍️ Posts count: {{ tweet_count }}</li>
+        <li>🔥 Influencers subscribed: {{ influencer_count }}</li>
+        <li>AI used in posts: {{ ai_used|yesno:"Yes,No" }}</li>
+        <li>Fake activity: {{ fake_activity }}</li>
+        <h2>🧠 Summary of account</h2>
+        <img src="{% static 'charts/' %}{{ username }}_chart.png" alt="perspectivity diagram" style="max-width: 400px;">
+        <p>{{ summary }}</p>
+    </ul>
+{% endif %}
