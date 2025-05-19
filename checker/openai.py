@@ -1,7 +1,9 @@
 import openai
 import re
+import os
 
-openai.api_key = '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'
+
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def is_ai_generated(tweet_text):
     prompt = f"Is that text similar to a tweet AI generated? just answer 'yes' or 'no'.\n\nTweet: \"{tweet_text}\""

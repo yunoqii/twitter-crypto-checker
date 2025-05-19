@@ -1,7 +1,8 @@
 import requests
 import time
+import os
 
-BEARER_TOKEN = 'AAAAAAAAAAAAAAAAAAAAAKbt1AEAAAAAJyhkiEm3Mjp6uPLPjesFyDzaGlU%3D6gPeZWtFFxk65UTvGiVBFOgEscHWn3wxmTgr8RPo3dlH6zGv3I'
+BEARER_TOKEN = os.getenv('BEARER_TOKEN')
 
 HEADERS = {
     'Authorization': f'Bearer {BEARER_TOKEN}'
