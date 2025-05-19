@@ -1,13 +1,46 @@
-<html>
-<head>
-    <title>Eagle Scout</title>
-</head>
-<body>
-    <h1>Elon musk is not a sigma</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Submit</button>
-    </form>
-</body>
-</html>
+{% extends 'checker/base.html' %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white shadow-md rounded-xl p-8 mt-12 border border-gray-200">
+  <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Check a Crypto Project</h1>
+  <p class="text-center text-gray-500 mb-6">Paste the project's Twitter URL below to analyze risk factors and legitimacy.</p>
+
+  <form id="check-form" method="post" class="space-y-4">
+    {% csrf_token %}
+    <div class="space-y-2">
+      {{ form.twitter_url.label_tag }}
+      {{ form.twitter_url }}
+      {% if form.twitter_url.errors %}
+        <p class="text-red-500 text-sm">{{ form.twitter_url.errors }}</p>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300">
+      🚀 Analyze
+    </button>
+  </form>
+
+  <div id="loading-spinner" class="hidden mt-6 flex justify-center">
+    <svg class="animate-spin h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+         viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10"
+              stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('check-form');
+    const spinner = document.getElementById('loading-spinner');
+
+    form.addEventListener('submit', () => {
+      spinner.classList.remove('hidden');
+    });
+  });
+</script>
+{% endblock %}

@@ -1,19 +1,95 @@
-{% load static %}
+{% extends 'checker/base.html' %}
 
-<h1>Result for: @{{ username }}</h1>
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <!-- Project Info -->
+  <div class="bg-gray-900 p-6 rounded-lg shadow-md border border-gray-700 text-white">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-semibold">Project Info for
+        <span class="inline-block bg-blue-900 text-blue-300 font-mono px-3 py-1 rounded-lg ml-2 shadow-sm">
+            <a href="https://x.com/{{ username }}" target="_blank" rel="noopener noreferrer">
+          @{{username}}
+            </a>
+        </span></h2>
+        <img src="{{ avatar_url }}" alt="Profile Picture"
+             class="w-16 h-16 rounded-full border-2 border-blue-500 shadow-md">
+    </div>
+    <p><span class="font-semibold">Followers:</span> {{ followers_count }}</p>
+    <p><span class="font-semibold">Tweet Count:</span> {{ tweet_count }}</p>
+    <p><span class="font-semibold">Account Created:</span> {{ created_at }}</p>
+  </div>
 
-{% if error %}
-    <p style="color:red;">{{ error }}</p>
-{% else %}
-    <ul>
-        <li>📅 Reg date: {{ created_at }}</li>
-        <li>👥 Subs: {{ followers_count }}</li>
-        <li>✍️ Posts count: {{ tweet_count }}</li>
-        <li>🔥 Influencers subscribed: {{ influencer_count }}</li>
-        <li>AI used in posts: {{ ai_used|yesno:"Yes,No" }}</li>
-        <li>Fake activity: {{ fake_activity }}</li>
-        <h2>🧠 Summary of account</h2>
-        <img src="{% static 'charts/' %}{{ username }}_chart.png" alt="perspectivity diagram" style="max-width: 400px;">
-        <p>{{ summary }}</p>
-    </ul>
-{% endif %}
+  <!-- AI & Other Info -->
+  <div class="bg-gray-900 p-6 rounded-lg shadow-md border border-gray-700 text-white">
+    <h2 class="text-xl font-semibold mb-4">Other Info</h2>
+    <p><span class="font-semibold">AI Fingerprint Detection:</span> {{ ai_used }}</p>
+    <p><span class="font-semibold">Fake Activity Detection:</span> {{ fake_activity }}</p>
+    <p class="text-sm italic text-gray-400 mt-2">Fake activity includes signs of engagement inflation such as purchased likes, bot followers, or repetitive posts.</p>
+  </div>
+
+  <!-- Influencer Check -->
+  <div class="bg-gray-900 p-6 rounded-lg shadow-md border border-gray-700 text-white md:col-span-2">
+    <h2 class="text-xl font-semibold mb-4">Influencer Check</h2>
+    {% if influencer_matches %}
+      <p class="mb-2">The following influencers follow this project:</p>
+      <ul class="list-disc list-inside">
+        {% for match in influencer_matches %}
+          <li>@{{ match }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No major influencers found following this project.</p>
+    {% endif %}
+  </div>
+
+  <!-- Summary Block -->
+  <div class="bg-gray-900 p-6 rounded-lg shadow-md border border-gray-700 text-white md:col-span-2">
+    <h2 class="text-xl font-semibold mb-4">AI Summary</h2>
+    <p>{{ summary }}</p>
+  </div>
+
+  <!-- Diagram Block -->
+  <div class="bg-gray-900 p-6 rounded-lg shadow-md border border-gray-700 text-white flex flex-col items-center md:col-span-2">
+    <h2 class="text-xl font-semibold mb-4">
+EagleScout AI Scoring</h2>
+    {% if perspectivity %}
+      <img src="/{{ perspectivity }}" alt="Perspectivity Chart" class="w-[400px] h-[400px] object-contain">
+    {% else %}
+      <p>Chart not available.</p>
+    {% endif %}
+  </div>
+
+  <!-- Coming Soon -->
+<div class="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-lg shadow-xl border border-gray-700 text-white md:col-span-2">
+  <h2 class="text-xl font-bold mb-6 text-yellow-400">🚧 Coming Soon</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-gray-700 p-4 rounded-lg shadow">
+      <h3 class="font-semibold text-blue-300 mb-2">CA detection</h3>
+      <p>Detect if contract address (CA) was posted in tweets.</p>
+    </div>
+    <div class="bg-gray-700 p-4 rounded-lg shadow">
+      <h3 class="font-semibold text-blue-300 mb-2">First followers</h3>
+      <p>Track first users who followed the project’s Twitter account.</p>
+    </div>
+    <div class="bg-gray-700 p-4 rounded-lg shadow">
+      <h3 class="font-semibold text-blue-300 mb-2">Deleted tweets</h3>
+      <p>Reveal if tweets were deleted over time.</p>
+    </div>
+    <div class="bg-gray-700 p-4 rounded-lg shadow">
+      <h3 class="font-semibold text-blue-300 mb-2">Onchain Analysis</h3>
+      <p>Analyze token holders and movement across wallets.</p>
+    </div>
+  </div>
+
+  <p class="text-center mt-6 text-gray-400 italic">All features above are under active development.</p>
+</div>
+
+
+  <div class="text-center mt-8">
+    <a href="{% url 'index' %}" class="text-blue-600 hover:underline font-medium">
+      ← Check another project
+    </a>
+  </div>
+  </div>
+
+{% endblock %}

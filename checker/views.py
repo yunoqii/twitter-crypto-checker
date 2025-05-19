@@ -5,12 +5,19 @@ from django.shortcuts import render, redirect
 from .forms import TwitterCheckerForm
 import re
 from .influencers import load_influencer_usernames
-from .twitter_api import get_user_data, get_followers_usernames, get_recent_tweets
-from .openai import check_ai_usage, generate_ai_summary
+from .twitter_api import get_user_data, get_followers_usernames, get_recent_tweets, get_user_id, is_user_following
+from .openai import check_ai_usage, generate_ai_summary, generate_fake_activity_summary
 from datetime import datetime
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+from .models import InfluencerFollow
+
+
+def is_project_followed_by_influencers(project_username):
+    project_username = project_username.lower()
+    return InfluencerFollow.objects.filter(followed_username=project_username).exists()
+
 
 def generate_pie_chart(score, username):
     values = [score, 100 - score]
@@ -20,7 +27,7 @@ def generate_pie_chart(score, username):
 
     wedges, texts, autotexts = ax.pie(
         values,
-        labels=['Perspectivity', ''],
+        labels=['Trustworthiness', ''],
         startangle=140,
         colors=colors,
         autopct=lambda pct: f'{int(round(pct))}%' if pct > 10 else '',
@@ -78,7 +85,9 @@ def project_result(request, username):
 
     if not user_data:
         return render(request, 'checker/result.html', {'error': 'No user found', 'username': username})
-
+    avatar_url = user_data.get('profile_image_url')
+    if avatar_url:
+        avatar_url = avatar_url.replace('_normal', '')
     formatted_date = format_date(user_data['created_at'])
 
     influencer_usernames = load_influencer_usernames()
@@ -86,7 +95,7 @@ def project_result(request, username):
     user_id = user_data['id']
 
     followers = get_followers_usernames(user_id)
-
+    fake_activity_analysis = generate_fake_activity_summary(user_data)
     influencers_following = influencer_usernames.intersection(followers)
     influencers_count = len(influencers_following)
     recent_tweets = get_recent_tweets(user_data['id'], count=10)
@@ -99,9 +108,16 @@ def project_result(request, username):
         influencers_count=influencers_count,
     )
     perspectivity = generate_pie_chart(score, username)
+    project_user_id = user_data['id']
+    influencer_usernames = load_influencer_usernames()
+    followed_by_influencers = []
+
+
+    influencer_count = len(followed_by_influencers)
 
     return render(request, 'checker/result.html', {
         'username': username,
+        'avatar_url': avatar_url,
         'created_at': formatted_date,
         'followers_count': user_data['followers_count'],
         'tweet_count': user_data['tweet_count'],
@@ -110,4 +126,5 @@ def project_result(request, username):
         'fake_activity': fake_activity,
         'summary': summary,
         'perspectivity': perspectivity,
+        'fake_activity_analysis': fake_activity_analysis,
     })

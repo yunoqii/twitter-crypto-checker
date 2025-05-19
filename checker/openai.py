@@ -1,7 +1,7 @@
 import openai
 import re
 
-openai.api_key = ''
+openai.api_key = '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'
 
 def is_ai_generated(tweet_text):
     prompt = f"Is that text similar to a tweet AI generated? just answer 'yes' or 'no'.\n\nTweet: \"{tweet_text}\""
@@ -21,19 +21,38 @@ def check_ai_usage(tweets):
         return False
     return ai_count / len(tweets) >= 0.5
 
+def generate_fake_activity_summary(user_data):
+    prompt = f"""
+Analyze the following Twitter user data to detect potential fake activity such as fake followers, inflated likes, or suspicious engagement patterns. 
+Summarize your findings in one short sentence suitable for non-technical users.
+
+Data:
+- Username: {user_data.get('username')}
+- Followers: {user_data.get('followers_count')}
+- Friends: {user_data.get('friends_count')}
+- Tweets: {user_data.get('tweet_count')}
+- Verified: {user_data.get('verified')}
+- Account Created: {user_data.get('created_at')}
+- Protected: {user_data.get('protected')}
+"""
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are an expert in social media analysis."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=80,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return "Could not generate analysis at this time."
+
 def generate_ai_summary(username, user_data, ai_used, influencers_count):
     prompt = f"""
-Analize a twitter account @{username} and make a short summary in 2-3 sentences.
-
-Data of account:
-- Registration date: {user_data['created_at'][:10]}
-- Followers: {user_data['followers_count']}
-- Tweets: {user_data['tweet_count']}
-- If AI used: {'Yes' if ai_used else 'No'}
-- Influencers subscribed: {influencers_count}
-
-Use your own ideas also to analize
-Formulate your answer as if you were an analyst making a summary judgment on the suspiciousness of a cryptoproject account.
+    Write a short review of a twitter crypto project @{username}. Analyze it with your own metrics, give a short opinion about it in 2-3 sentences. 
 """
 
     response = openai.ChatCompletion.create(

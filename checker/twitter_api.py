@@ -1,27 +1,35 @@
 import requests
+import time
 
-BEARER_TOKEN = ''
+BEARER_TOKEN = 'AAAAAAAAAAAAAAAAAAAAAKbt1AEAAAAAJyhkiEm3Mjp6uPLPjesFyDzaGlU%3D6gPeZWtFFxk65UTvGiVBFOgEscHWn3wxmTgr8RPo3dlH6zGv3I'
 
 HEADERS = {
     'Authorization': f'Bearer {BEARER_TOKEN}'
 }
 
-def get_user_data(username):
-    url = f'https://api.twitter.com/2/users/by/username/{username}?user.fields=created_at,public_metrics'
-    response = requests.get(url, headers=HEADERS)
 
-    if response.status_code == 200:
-        data = response.json()['data']
-        print(data)
-        return {
-            'id': data['id'],
-            'username': data['username'],
-            'created_at': data['created_at'],
-            'followers_count': data['public_metrics']['followers_count'],
-            'tweet_count': data['public_metrics']['tweet_count'],
-        }
-    else:
+def get_user_data(username):
+    headers = {
+        'Authorization': f'Bearer {BEARER_TOKEN}',
+    }
+    url = f"https://api.twitter.com/2/users/by/username/{username}"
+    params = {
+        'user.fields': 'profile_image_url,public_metrics,created_at'
+    }
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code != 200:
         return None
+
+    user_info = response.json().get('data', {})
+    return {
+        'id': user_info.get('id'),
+        'username': user_info.get('username'),
+        'followers_count': user_info.get('public_metrics', {}).get('followers_count', 0),
+        'tweet_count': user_info.get('public_metrics', {}).get('tweet_count', 0),
+        'created_at': user_info.get('created_at'),
+        'profile_image_url': user_info.get('profile_image_url'),
+    }
+
 
 
 def get_followers_usernames(user_id, max_results=1000):
@@ -34,6 +42,7 @@ def get_followers_usernames(user_id, max_results=1000):
     response = requests.get(url, headers=HEADERS, params=params)
     if response.status_code == 200:
         data = response.json()
+        print(data)
         for user in data.get("data", []):
             followers.add(user['username'].lower())
     return followers
@@ -51,3 +60,58 @@ def get_recent_tweets(user_id, count=10):
         tweets = response.json().get('data', [])
         return [tweet['text'] for tweet in tweets]
     return []
+
+
+def get_user_id(username):
+    url = f"https://api.twitter.com/2/users/by/username/{username}"
+    headers = {"Authorization": f"Bearer {BEARER_TOKEN}"}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.json()['data']['id']
+    print(response.status_code)
+    return None
+
+def get_following(user_id):
+    url = f"https://api.twitter.com/2/users/{user_id}/following"
+    headers = {"Authorization": f"Bearer {BEARER_TOKEN}"}
+    params = {"max_results": 1000, "user.fields": "username"}
+
+    following = []
+    next_token = None
+
+    while True:
+        if next_token:
+            params["pagination_token"] = next_token
+
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code != 200:
+            print(f"[ERROR] {response.status_code} — {response.text}")
+            break
+
+        data = response.json()
+        following += [user['username'].lower() for user in data.get("data", [])]
+
+        if "next_token" in data.get("meta", {}):
+            next_token = data["meta"]["next_token"]
+        else:
+            break
+
+    return following
+
+def is_user_following(source_id, target_id):
+    url = f'https://api.twitter.com/2/users/{source_id}/following'
+    params = {'max_results': 1000}
+    while True:
+        response = requests.get(url, headers=HEADERS, params=params)
+        if response.status_code != 200:
+            return False
+        data = response.json()
+        if 'data' in data:
+            if any(user['id'] == target_id for user in data['data']):
+                return True
+        if 'meta' in data and 'next_token' in data['meta']:
+            params['pagination_token'] = data['meta']['next_token']
+            time.sleep(1)
+        else:
+            break
+    return False
